@@ -190,6 +190,8 @@ string configFile::implodeString(vector< string > _strList, string _delim)
   for (unsigned int i = 0; i < _strList.size();i++)
     retVal.append(_strList.at(i)+_delim);
   
+  //remove the last piece of imploded stuff
+//   retVal.erase(retVal.end()-_delim.length(),retVal.end());
   return retVal;
   
 }

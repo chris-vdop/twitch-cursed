@@ -42,8 +42,6 @@ private:
     MENU   *me;
     WINDOW *win;
     WINDOW *chanWin;
-
-
 };
 
 
@@ -207,7 +205,7 @@ void myGameLister::runGui(WINDOW* _pluginWindow)
     mvwaddstr(win, 1, (wx-26)/2, "***** Games toplist! *****");
     post_menu(me);
 
-    mvwaddstr(win,17, 3, ">> End this module via 'q' or return to bash via menu");
+    mvwaddstr(win,wy-3, 3, ">> End this module via 'q' or return to bash via menu");
 
 
     chanWin = derwin(pluginWindow,y-5,(x-4)/2, 3, (x-4)/2 + 2);
@@ -249,8 +247,6 @@ void myGameLister::addFav(int _index)
         mvwprintw(chanWin,y-3,8,"!!Added %s to favourites and wrote config.cfg",value_menu.c_str());
         wrefresh(chanWin);
     }
-
-
 }
 
 
