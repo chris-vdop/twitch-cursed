@@ -24,7 +24,7 @@ public:
 
 private:
 
-
+    void addFav(int _index);
     void makeMenu();
     void run_command(int _index);
 
@@ -41,9 +41,13 @@ private:
     std::vector<ITEM*> it;
     MENU   *me;
     WINDOW *win;
+    WINDOW *chanWin;
 
 
 };
+
+
+
 
 
 
@@ -66,6 +70,7 @@ void myGameLister::cleanUpCurses()
         free_item(it[i]);
     }
 
+    delwin(chanWin);
     delwin(win);
     werase(pluginWindow);
     box(pluginWindow,0,0);
@@ -73,7 +78,7 @@ void myGameLister::cleanUpCurses()
 
 void myGameLister::handleChar(int _ch)
 {
-  
+
     switch(_ch)
     {
     case KEY_DOWN:
@@ -82,33 +87,37 @@ void myGameLister::handleChar(int _ch)
     case KEY_UP:
         menu_driver(me, REQ_UP_ITEM);
         break;
+
+    case 'a':
+        addFav(item_index(current_item(me)));
+        break;
     case 0xA:
         if(item_index(current_item(me)) == it.size()-2)
             exit(0);
         else
             run_command(item_index(current_item(me)));
     }
-    
-    
+
+
     wrefresh(win);
 }
 
 void myGameLister::makeMenu()
 {
-  myTwitch.refreshGames();
-  
-  //we only display some games
+    myTwitch.refreshGames();
+
+    //we only display some games
     int entries = configFile::StrToInt(configFile::getInstance()->getContents("glist_count"));
     if (entries < 10)
-      entries = 10;
-    
+        entries = 10;
+
     if (entries > myTwitch.getGameInfoCount())
-      entries = myTwitch.getGameInfoCount();
-    
+        entries = myTwitch.getGameInfoCount();
+
     mvwprintw(pluginWindow,2,1,"Loaded %i games from twitch toplist!",entries);
     refresh();
     wrefresh(pluginWindow);
-    
+
     it.resize(entries+2);
     if (it.size() > 100)
     {
@@ -120,7 +129,7 @@ void myGameLister::makeMenu()
 
     for (int i=0; i < entries; i++)
     {
-	sprintf(nameBuffer[i],"%i",myTwitch.getGameInfo(i).viewers);
+        sprintf(nameBuffer[i],"%i",myTwitch.getGameInfo(i).viewers);
         string streamName = myTwitch.getGameInfo(i).name;
         sprintf(titleBuffer[i],"viewers in %i channels -- %s",myTwitch.getGameInfo(i).channels,myTwitch.getGameInfo(i).name.c_str());
 
@@ -133,52 +142,116 @@ void myGameLister::makeMenu()
 
 myGameLister::myGameLister()
 {
-  name = "gameL";
-  description = "Game-lister and Browser";
-  pluginList::getInstance()->activated_classes.push_back(this);
+    name = "gameL";
+    description = "Game-lister and Browser";
+    pluginList::getInstance()->activated_classes.push_back(this);
 }
 
 void myGameLister::run_command(int _index)
 {
+    string gameName = myTwitch.getGameInfo(_index).name;
+    myTwitch.loadWholeGame(gameName);
+    //clear the window for the channellist
+    werase(chanWin);
+    box(chanWin,0,0);
 
+    int x,y;
+    getmaxyx(chanWin,y,x);
+
+    int max = y-4;
+    if (myTwitch.getStreamInfoCount() < max)
+        max = myTwitch.getStreamInfoCount();
+
+
+    mvwaddstr(chanWin, 1, (x-26)/2, "***** Channels toplist! *****");
+
+
+    for (int i =0; i < max; i++)
+    {
+        mvwprintw(chanWin,i+2,4,"%i. %s %iV",i,myTwitch.getStreamInfo(i).display_name.c_str(),myTwitch.getStreamInfo(i).viewers);
+    }
+
+
+    mvwprintw(chanWin,y-2,8,">> press 'a' to add one of these to your favourites!");
+
+    refresh();
+    wrefresh(chanWin);
 }
 
 void myGameLister::runGui(WINDOW* _pluginWindow)
 {
-int x,y;
+    int x,y;
     getmaxyx(_pluginWindow,y,x);
 
-     pluginWindow = _pluginWindow;
-     char buffer[200];
-     sprintf(buffer,"Plugin: %s -- %s",name.c_str(),description.c_str());
-     mvwaddstr(pluginWindow,1,1,buffer);
+    pluginWindow = _pluginWindow;
+    char buffer[200];
+    sprintf(buffer,"Plugin: %s -- %s",name.c_str(),description.c_str());
+    mvwaddstr(pluginWindow,1,1,buffer);
 
-     wrefresh(pluginWindow);
-    
-    
+    wrefresh(pluginWindow);
+
+
     makeMenu();
-    
-    
+
+
 
     me = new_menu(&it[0]);
 
-    win = derwin(pluginWindow,y-5, x-4, 3, 2);
+    win = derwin(pluginWindow,y-5, (x-4)/2, 3, 2);
     set_menu_win (me, win);
-    set_menu_sub (me, derwin(win, y-8, x-8, 3, 2));
+    set_menu_sub (me, derwin(win, y-8, (x-8)/2, 3, 2));
     set_menu_mark (me,"-->");
     box(win, 0, 0);
-    mvwaddstr(win, 1, (x-26)/2, "***** Games toplist! *****");
+    int wx,wy;
+    getmaxyx(win,wy,wx);
+    mvwaddstr(win, 1, (wx-26)/2, "***** Games toplist! *****");
     post_menu(me);
 
-    mvwaddstr(win,17, 3, "End this module via q or return to bash via menu");
+    mvwaddstr(win,17, 3, ">> End this module via 'q' or return to bash via menu");
 
 
+    chanWin = derwin(pluginWindow,y-5,(x-4)/2, 3, (x-4)/2 + 2);
+
+
+    box(chanWin,0,0);
 
     refresh();
-//     wrefresh(pluginWindow);
     wrefresh(win);
+    wrefresh(chanWin);
 }
 
+
+void myGameLister::addFav(int _index)
+{
+    char input[10];
+    int x,y;
+    getmaxyx(chanWin,y,x);
+    mvwprintw(chanWin,y-3,8,"!!Enter the stream number, then press Enter!");
+    wrefresh(chanWin);
+    int ret =  wgetnstr(chanWin,input,4);
+    stringstream s(input);
+    int out = -1;
+    s >> out;
+    if (out >= 0 && out < myTwitch.getStreamInfoCount())
+    {
+        string indexStr = configFile::getInstance()->getContents("menu_entries");
+        indexStr.erase(indexStr.end()-1,indexStr.end());
+        int index = configFile::StrToInt(indexStr);
+        string key_menu =   "entry_"+configFile::IntToStr(index);
+        string value_menu = "twitch.tv/"+myTwitch.getStreamInfo(out).name;
+        configFile::getInstance()->getDataMap()[key_menu] = value_menu;
+        string src = "source";
+        string key = "entry_"+configFile::IntToStr(index)+"_quality";
+        configFile::getInstance()->getDataMap()[key] = src;
+        index++;
+        configFile::getInstance()->getDataMap()["menu_entries"] = configFile::IntToStr(index);
+        configFile::getInstance()->writeFile("config.cfg");
+        mvwprintw(chanWin,y-3,8,"!!Added %s to favourites and wrote config.cfg",value_menu.c_str());
+        wrefresh(chanWin);
+    }
+
+
+}
 
 
 

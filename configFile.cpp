@@ -9,6 +9,15 @@ configFile::configFile()
 
 }
 
+
+bool configFile::isNumber(string _input)
+{
+    std::string::const_iterator it = _input.begin();
+    while (it != _input.end() && std::isdigit(*it)) ++it;
+      return !_input.empty() && it == _input.end();
+}
+
+
 int configFile::readFile(string _inputFile)
 {
     // do the actual reading

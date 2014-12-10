@@ -55,6 +55,7 @@ public:
   
   int loadStreamInfo(string _strName);
   int loadManyStreams(vector<string> _nameList,bool insertStructs=true);
+  int loadWholeGame(string _gameName, bool insertStructs = true);
   
   twitchStreamInfo& getStreamInfo(int _index){return gottenStreamInfo.at(_index);}
   int getStreamInfoCount(){return gottenStreamInfo.size();}
@@ -72,10 +73,14 @@ public:
   int refreshStreams();
   int refreshGames();
   
+  //boldly copied from: https://code.google.com/p/twitcurl/source/browse/trunk/libtwitcurl/urlencode.cpp?r=47
+  static string char2hex( char dec );
+  static string urlencode( const std::string &c );
   
   
   
 private:
+  int parseStreamsArray(json_t* _streamsArray);
   vector<twitchStreamInfo> gottenStreamInfo;
   vector<twitchGameInfo> gamesPlayed;
   
