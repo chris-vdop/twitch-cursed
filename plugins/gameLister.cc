@@ -25,6 +25,7 @@ public:
 private:
 
     void addFav(int _index);
+    void tuneIn(int _index);
     void makeMenu();
     void run_command(int _index);
 
@@ -88,6 +89,9 @@ void myGameLister::handleChar(int _ch)
 
     case 'a':
         addFav(item_index(current_item(me)));
+        break;
+    case 't':
+        tuneIn(item_index(current_item(me)));
         break;
     case 0xA:
         if(item_index(current_item(me)) == it.size()-2)
@@ -169,7 +173,7 @@ void myGameLister::run_command(int _index)
         mvwprintw(chanWin,i+2,4,"%i. %s %iV",i,myTwitch.getStreamInfo(i).display_name.c_str(),myTwitch.getStreamInfo(i).viewers);
     }
 
-
+    mvwprintw(chanWin,y-3,8,">> press 't' to tune in to a stream directly");
     mvwprintw(chanWin,y-2,8,">> press 'a' to add one of these to your favourites!");
 
     refresh();
@@ -233,7 +237,6 @@ void myGameLister::addFav(int _index)
     if (out >= 0 && out < myTwitch.getStreamInfoCount())
     {
         string indexStr = configFile::getInstance()->getContents("menu_entries");
-        indexStr.erase(indexStr.end()-1,indexStr.end());
         int index = configFile::StrToInt(indexStr);
         string key_menu =   "entry_"+configFile::IntToStr(index);
         string value_menu = "twitch.tv/"+myTwitch.getStreamInfo(out).name;
@@ -247,6 +250,33 @@ void myGameLister::addFav(int _index)
         mvwprintw(chanWin,y-3,8,"!!Added %s to favourites and wrote config.cfg",value_menu.c_str());
         wrefresh(chanWin);
     }
+}
+
+
+void myGameLister::tuneIn(int _index)
+{
+    char input[10];
+    int x,y;
+    getmaxyx(chanWin,y,x);
+    mvwprintw(chanWin,y-3,8,"!!Enter the stream number, then press Enter!");
+    wrefresh(chanWin);
+    int ret =  wgetnstr(chanWin,input,4);
+    stringstream s(input);
+    int out = -1;
+    s >> out;
+    if (out >= 0 && out < myTwitch.getStreamInfoCount())
+    {
+        string command = configFile::getInstance()->getContents("run_command");
+        char buffer[200];
+        string value_url = "twitch.tv/"+myTwitch.getStreamInfo(out).name;
+        string quality = "source";
+        sprintf(buffer,command.c_str(),value_url.c_str(),quality.c_str());
+        system(buffer);
+
+        mvwprintw(chanWin,y-3,8,"!!Starting stream %s!",value_url.c_str());
+        wrefresh(chanWin);
+    }
+
 }
 
 
