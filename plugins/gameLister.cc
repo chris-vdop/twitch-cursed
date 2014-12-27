@@ -73,7 +73,7 @@ void myGameLister::cleanUpCurses()
 
 void myGameLister::handleChar(int _ch)
 {
-  
+
     switch(_ch)
     {
     case KEY_DOWN:
@@ -88,27 +88,27 @@ void myGameLister::handleChar(int _ch)
         else
             run_command(item_index(current_item(me)));
     }
-    
-    
+
+
     wrefresh(win);
 }
 
 void myGameLister::makeMenu()
 {
-  myTwitch.refreshGames();
-  
-  //we only display some games
+    myTwitch.refreshGames();
+
+    //we only display some games
     int entries = configFile::StrToInt(configFile::getInstance()->getContents("glist_count"));
     if (entries < 10)
-      entries = 10;
-    
+        entries = 10;
+
     if (entries > myTwitch.getGameInfoCount())
-      entries = myTwitch.getGameInfoCount();
-    
+        entries = myTwitch.getGameInfoCount();
+
     mvwprintw(pluginWindow,2,1,"Loaded %i games from twitch toplist!",entries);
     refresh();
     wrefresh(pluginWindow);
-    
+
     it.resize(entries+2);
     if (it.size() > 100)
     {
@@ -120,7 +120,7 @@ void myGameLister::makeMenu()
 
     for (int i=0; i < entries; i++)
     {
-	sprintf(nameBuffer[i],"%i",myTwitch.getGameInfo(i).viewers);
+        sprintf(nameBuffer[i],"%i",myTwitch.getGameInfo(i).viewers);
         string streamName = myTwitch.getGameInfo(i).name;
         sprintf(titleBuffer[i],"viewers in %i channels -- %s",myTwitch.getGameInfo(i).channels,myTwitch.getGameInfo(i).name.c_str());
 
@@ -133,9 +133,9 @@ void myGameLister::makeMenu()
 
 myGameLister::myGameLister()
 {
-  name = "gameL";
-  description = "Game-lister and Browser";
-  pluginList::getInstance()->activated_classes.push_back(this);
+    name = "gameL";
+    description = "Game-lister and Browser";
+    pluginList::getInstance()->activated_classes.push_back(this);
 }
 
 void myGameLister::run_command(int _index)
@@ -145,20 +145,20 @@ void myGameLister::run_command(int _index)
 
 void myGameLister::runGui(WINDOW* _pluginWindow)
 {
-int x,y;
+    int x,y;
     getmaxyx(_pluginWindow,y,x);
 
-     pluginWindow = _pluginWindow;
-     char buffer[200];
-     sprintf(buffer,"Plugin: %s -- %s",name.c_str(),description.c_str());
-     mvwaddstr(pluginWindow,1,1,buffer);
+    pluginWindow = _pluginWindow;
+    char buffer[200];
+    sprintf(buffer,"Plugin: %s -- %s",name.c_str(),description.c_str());
+    mvwaddstr(pluginWindow,1,1,buffer);
 
-     wrefresh(pluginWindow);
-    
-    
+    wrefresh(pluginWindow);
+
+
     makeMenu();
-    
-    
+
+
 
     me = new_menu(&it[0]);
 
