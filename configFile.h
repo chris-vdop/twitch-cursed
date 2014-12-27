@@ -44,6 +44,8 @@ public:
     static vector<string> explodeStringWhiteSpace(string _input);
     static string implodeString(vector< string > _strList, string _delim);
     
+    static bool isNumber(string _input);
+    
     static int  StrToInt(string _arg);
     static string IntToStr(int _arg);
     static double StrToDouble(string _arg);

@@ -9,6 +9,15 @@ configFile::configFile()
 
 }
 
+
+bool configFile::isNumber(string _input)
+{
+    std::string::const_iterator it = _input.begin();
+    while (it != _input.end() && std::isdigit(*it)) ++it;
+      return !_input.empty() && it == _input.end();
+}
+
+
 int configFile::readFile(string _inputFile)
 {
     // do the actual reading
@@ -181,6 +190,8 @@ string configFile::implodeString(vector< string > _strList, string _delim)
   for (unsigned int i = 0; i < _strList.size();i++)
     retVal.append(_strList.at(i)+_delim);
   
+  //remove the last piece of imploded stuff
+//   retVal.erase(retVal.end()-_delim.length(),retVal.end());
   return retVal;
   
 }
